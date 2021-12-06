@@ -132,7 +132,6 @@ NOTES:
  *      the correct answers.
  */
 
-
 #endif
 //1
 /* 
@@ -142,9 +141,10 @@ NOTES:
  *   Max ops: 14
  *   Rating: 1
  */
-int bitXor(int x, int y) {
-  /* 与非 → 或 与或 → 异或 */
-  return ~(~(~x & y) & ~(x & ~y));
+int bitXor(int x, int y)
+{
+    /* 与非 → 或 与或 → 异或 */
+    return ~(~(~x & y) & ~(x & ~y));
 }
 /* 
  * tmin - return minimum two's complement integer 
@@ -152,9 +152,10 @@ int bitXor(int x, int y) {
  *   Max ops: 4
  *   Rating: 1
  */
-int tmin(void) {
-  /* nothing special here*/
-  return 1<<31;
+int tmin(void)
+{
+    /* nothing special here*/
+    return 1 << 31;
 }
 //2
 /*
@@ -164,15 +165,16 @@ int tmin(void) {
  *   Max ops: 10
  *   Rating: 1
  */
-int isTmax(int x) {
-  /* 因为没有位移 所以不能用规律构造
+int isTmax(int x)
+{
+    /* 因为没有位移 所以不能用规律构造
   target: 用 0x7F 和其他小数表示出 0x00
   0x80 + 0x7F = 0xFF, 0x80 - 0x7F = 0x01
   例外: 0x00 + 0xFF = 0xFF, 0x00 - 0xFF = 0x01 */
-  int is_0x80 = x + 1;
-  int is_0x00 = x + is_0x80 + 1;
-  is_0x00 += !(x+1);
-  return !is_0x00;
+    int is_0x80 = x + 1;
+    int is_0x00 = x + is_0x80 + 1;
+    is_0x00 += !(x + 1);
+    return !is_0x00;
 }
 /* 
  * allOddBits - return 1 if all odd-numbered bits in word set to 1
@@ -182,16 +184,17 @@ int isTmax(int x) {
  *   Max ops: 12
  *   Rating: 2
  */
-int allOddBits(int x) {
-  /* 可以位移 所以用规律构造 0xAA */
-  int target = 0xAA;
-  target = target << 8;
-  target = target + 0xAA;
-  target = target << 8;
-  target = target + 0xAA;
-  target = target << 8;
-  target = target + 0xAA;
-  return !(target^(x&target));
+int allOddBits(int x)
+{
+    /* 可以位移 所以用规律构造 0xAA */
+    int target = 0xAA;
+    target = target << 8;
+    target = target + 0xAA;
+    target = target << 8;
+    target = target + 0xAA;
+    target = target << 8;
+    target = target + 0xAA;
+    return !(target ^ (x & target));
 }
 /* 
  * negate - return -x 
@@ -200,11 +203,12 @@ int allOddBits(int x) {
  *   Max ops: 5
  *   Rating: 2
  */
-int negate(int x) {
-  /* 一开始还在想只要符号位取反 但注意这里只要补码就行  */
-  // int symbol = 1 << 31;
-  // return (~x & symbol) | (x & ~symbol);
-  return ~x + 1;
+int negate(int x)
+{
+    /* 一开始还在想只要符号位取反 但注意这里只要补码就行  */
+    // int symbol = 1 << 31;
+    // return (~x & symbol) | (x & ~symbol);
+    return ~x + 1;
 }
 
 //3
@@ -217,8 +221,16 @@ int negate(int x) {
  *   Max ops: 15
  *   Rating: 3
  */
-int isAsciiDigit(int x) {
-  return 2;
+int isAsciiDigit(int x)
+{
+    /* 比较大小 操作减法 */
+    int sign = 0x1 << 31; // 避免用逻辑与
+    int upperBound = ~0x39;
+    int lowerBound = ~0x30 + 1;
+    // return ((upperBound + x) >> 31) && !((lowerBound + x) >> 31);
+    int upperJudge = ((upperBound + x) & sign) >> 31;
+    int lowerJudge = ~((lowerBound + x) & sign) >> 31;
+    return !!(upperJudge & lowerJudge);
 }
 /* 
  * conditional - same as x ? y : z 
@@ -227,8 +239,12 @@ int isAsciiDigit(int x) {
  *   Max ops: 16
  *   Rating: 3
  */
-int conditional(int x, int y, int z) {
-  return 2;
+int conditional(int x, int y, int z)
+{
+    /* 目标是把 x 转换成全 1 全 0 */
+    int flag = !!x;
+    flag = flag << 31 >> 31; // 全 0 全 1
+    return (y & flag) + (z & ~flag); // 注意优先级
 }
 /* 
  * isLessOrEqual - if x <= y  then return 1, else return 0 
@@ -237,8 +253,9 @@ int conditional(int x, int y, int z) {
  *   Max ops: 24
  *   Rating: 3
  */
-int isLessOrEqual(int x, int y) {
-  return 2;
+int isLessOrEqual(int x, int y)
+{
+    return 2;
 }
 //4
 /* 
@@ -249,8 +266,9 @@ int isLessOrEqual(int x, int y) {
  *   Max ops: 12
  *   Rating: 4 
  */
-int logicalNeg(int x) {
-  return 2;
+int logicalNeg(int x)
+{
+    return 2;
 }
 /* howManyBits - return the minimum number of bits required to represent x in
  *             two's complement
@@ -264,8 +282,9 @@ int logicalNeg(int x) {
  *  Max ops: 90
  *  Rating: 4
  */
-int howManyBits(int x) {
-  return 0;
+int howManyBits(int x)
+{
+    return 0;
 }
 //float
 /* 
@@ -279,8 +298,9 @@ int howManyBits(int x) {
  *   Max ops: 30
  *   Rating: 4
  */
-unsigned floatScale2(unsigned uf) {
-  return 2;
+unsigned floatScale2(unsigned uf)
+{
+    return 2;
 }
 /* 
  * floatFloat2Int - Return bit-level equivalent of expression (int) f
@@ -294,8 +314,9 @@ unsigned floatScale2(unsigned uf) {
  *   Max ops: 30
  *   Rating: 4
  */
-int floatFloat2Int(unsigned uf) {
-  return 2;
+int floatFloat2Int(unsigned uf)
+{
+    return 2;
 }
 /* 
  * floatPower2 - Return bit-level equivalent of the expression 2.0^x
@@ -310,6 +331,7 @@ int floatFloat2Int(unsigned uf) {
  *   Max ops: 30 
  *   Rating: 4
  */
-unsigned floatPower2(int x) {
+unsigned floatPower2(int x)
+{
     return 2;
 }
