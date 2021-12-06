@@ -255,8 +255,22 @@ int conditional(int x, int y, int z)
  */
 int isLessOrEqual(int x, int y)
 {
-    return 2;
+    /* 加法实现减法 */
+    // solution 1
+    int sign = 0x01 << 31;
+    int checkSign = (~x + 1 + y) & sign; // 首位 0 为 x<=y; 首位 1 反之
+
+    // solution 2
+    // int diff = ~x + 1 + y;
+    // int checkSign = diff >> 31 & 0x01; // 好像会出错 但复现不出来了
+
+    int signX = x & sign;
+    int signY = y & sign;
+    int signXor = signX ^ signY; // 首位 1 为符号相反; 首位 0 反之
+
+    return !!((!signXor & !checkSign)|(signXor & signX)); // 首位做判断，后续均为 0
 }
+
 //4
 /* 
  * logicalNeg - implement the ! operator, using all of 
