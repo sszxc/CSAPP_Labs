@@ -395,5 +395,10 @@ int floatFloat2Int(unsigned uf)
  */
 unsigned floatPower2(int x)
 {
-    return 2;
+    if (x <= -127) // 注意非规格化里面已经没有2的幂了
+        return 0;
+    else if (x > 127) // 最大的2的幂 尾数也只能是0
+        return 0x7f800000;
+    else
+        return (x+127)<<23;
 }
