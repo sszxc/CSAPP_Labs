@@ -262,7 +262,7 @@ int isLessOrEqual(int x, int y)
 
     // solution 2
     // int diff = ~x + 1 + y;
-    // int checkSign = diff >> 31 & 0x01; // 好像会出错 但复现不出来了
+    // int checkSign = diff >> 31 & 0x01; // 之前好像会出错 但复现不出来了
 
     int signX = x & sign;
     int signY = y & sign;
@@ -282,7 +282,10 @@ int isLessOrEqual(int x, int y)
  */
 int logicalNeg(int x)
 {
-    return 2;
+    // 实现逻辑非 全零才出 0x01 关键是利用好符号位特征
+    // 最后一步用 &0x01 可以抹掉其他信息
+    // x符号位 | -x符号位 = 1
+    return ~(x >> 31 | (~x + 1) >> 31) & 0x01;
 }
 /* howManyBits - return the minimum number of bits required to represent x in
  *             two's complement
@@ -298,7 +301,26 @@ int logicalNeg(int x)
  */
 int howManyBits(int x)
 {
-    return 0;
+    // 1bit -1~0; 2bits -2~1; 3bits -4~3
+    // conditional 方法取绝对值
+    int sign = x >> 31; // 利用算术右移 用符号位覆盖全部
+    // x = (sign & ~x) | (~sign & x); //如果x为正则不变，否则按位取反（这样好找最高位为1的，原来是最高位为0的，这样也将符号位去掉了）
+    x = (~x & sign) + (x & ~sign); // 注意这里取反不能用 ~x+1，Tmin 会溢出
+    // 找到最高位的 1 再加一位符号位
+    // 参考了解答 二分法
+    int b16, b8, b4, b2, b1, b0;
+    b16 = !!(x >> 16) << 4; // 取高16位 判断是否全零 结果作为逻辑变量乘上权重
+    x = x >> b16;           // 如果有（至少需要16位），则将原数右移16位
+    b8 = !!(x >> 8) << 3;   // 高8位/高16-24位 是否全零
+    x = x >> b8;            // 如果有（至少需要16+8=24位），则右移8位
+    b4 = !!(x >> 4) << 2;   // 同理
+    x = x >> b4;
+    b2 = !!(x >> 2) << 1;
+    x = x >> b2;
+    b1 = !!(x >> 1);
+    x = x >> b1;
+    b0 = x;
+    return b16 + b8 + b4 + b2 + b1 + b0 + 1; // 注意符号位
 }
 //float
 /* 
