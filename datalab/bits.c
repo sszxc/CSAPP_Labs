@@ -336,7 +336,21 @@ int howManyBits(int x)
  */
 unsigned floatScale2(unsigned uf)
 {
-    return 2;
+    // float: (-1)^s * M * 2^E
+    // s→s 1, E→exp 8, M→frac 23
+    int sign = uf & (1 << 31); // 取出第1位
+    int exp = (uf & 0x7f800000) >> 23; // 取出第2-9位
+    if (exp == 255) // ∞、NaN
+        return uf;
+    if (exp == 0) // 非规格数
+        return uf << 1 | sign; // 直接移位 注意这里有平滑过渡的功劳
+    else
+    {
+        exp++;
+        if (exp == 255)
+            return 0x7f800000 | sign; // 溢出
+        return (exp << 23) + (uf & 0x807fffff); // 扣掉第2-9位
+    }
 }
 /* 
  * floatFloat2Int - Return bit-level equivalent of expression (int) f
@@ -352,7 +366,19 @@ unsigned floatScale2(unsigned uf)
  */
 int floatFloat2Int(unsigned uf)
 {
-    return 2;
+    // float: (-1)^s * M * 2^E
+    // s→s 1, E→exp 8, M→frac 23
+    int sign = uf & 0x80000000;              // 取出第1位
+    int exp = ((uf & 0x7f800000) >> 23) - 127; // 取出第2-9位 补偿bias
+    int frac = (uf & 0x007fffff) + 0x00800000; // 取出第10-32位 补偿隐含的1
+    if (exp > 31) // 溢出 or NaN
+        return 0x80000000;
+    if (exp < 0) // 幂指数太小 小于1
+        return 0;
+    // 根据阶码来操作尾数 从幂指数运算变成小数点位移
+    // 大于 说明1.xxxxx后面还需要补零；小于 说明1.xxxxx后面有多余的精度
+    int f = (exp > 23) ? (frac << (exp - 23)) : (frac >> (23 - exp));
+    return sign ? -f : f;
 }
 /* 
  * floatPower2 - Return bit-level equivalent of the expression 2.0^x
